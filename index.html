@@ -367,10 +367,13 @@
         // Handle keyboard events
         document.addEventListener('keydown', function(event) {
             if (event.code === 'Space') {
-                event.preventDefault(); // Prevent page scrolling
-                // Only allow spacebar cycling if we haven't reached the end
-                if (currentIndex < phrases.length) {
-                    nextPhrase();
+                // Only prevent spacebar cycling if we're NOT in the input field
+                if (event.target.id !== 'phrase-input') {
+                    event.preventDefault(); // Prevent page scrolling
+                    // Only allow spacebar cycling if we haven't reached the end
+                    if (currentIndex < phrases.length) {
+                        nextPhrase();
+                    }
                 }
             }
         });
