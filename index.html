@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phrase Cycler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 80px;
+        }
+        
+        .phrases-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 80%;
+        }
+        
+        .phrase {
+            text-align: center;
+            margin: 10px 0;
+            line-height: 1.2;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        
+        .phrase.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .phrase.current {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        
+        .phrase.previous {
+            font-size: 1.2em;
+            color: #666;
+        }
+        
+        .guide {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .submit-section {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .submit-section input {
+            padding: 8px 12px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 300px;
+        }
+        
+        .submit-section button {
+            padding: 8px 16px;
+            font-size: 1em;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .submit-section button:hover {
+            background-color: #005a8b;
+        }
+        
+        .feedback {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #28a745;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .feedback.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="guide">Press SPACEBAR to cycle through phrases</div>
+    <div class="counter">
+        <span id="current-num">1</span> of <span id="total-num">15</span>
+    </div>
+    
+    <div class="phrases-container" id="phrases-container">
+        <!-- Phrases will be dynamically added here -->
+    </div>
+    
+    <div class="submit-section">
+        <input type="text" id="phrase-input" placeholder="Add your own phrase..." maxlength="200">
+        <button onclick="submitPhrase()">Submit</button>
+    </div>
+    
+    <div class="feedback" id="feedback">Phrase added successfully!</div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+        apiKey: "AIzaSyCUtxswciqwySEfFU_D45BsVpCbILxjHRo",
+        authDomain: "gossip-gestures.firebaseapp.com",
+        projectId: "gossip-gestures",
+        storageBucket: "gossip-gestures.firebasestorage.app",
+        messagingSenderId: "759885271389",
+        appId: "1:759885271389:web:402f9ce3152c57898fd8b4",
+        measurementId: "G-MR3D4QSECX"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+
+        // Initial phrases (fallback if database is empty)
+        const initialPhrases = [
+            "Welcome to the phrase cycler",
+            "Every moment is a fresh beginning",
+            "The best time to plant a tree was 20 years ago",
+            "Life is what happens when you're busy making other plans",
+            "Be yourself; everyone else is already taken",
+            "In the middle of difficulty lies opportunity",
+            "The only way to do great work is to love what you do",
+            "Success is not final, failure is not fatal",
+            "The future belongs to those who believe in their dreams",
+            "It is during our darkest moments that we must focus to see the light",
+            "Change is the only constant in life",
+            "The journey of a thousand miles begins with one step",
+            "Yesterday is history, tomorrow is a mystery, today is a gift",
+            "Believe you can and you're halfway there",
+            "The only impossible journey is the one you never begin"
+        ];
+        
+        let phrases = [];
+        let currentIndex = 0;
+        
+        // Load phrases from Firestore
+        async function loadPhrases() {
+            try {
+                const phrasesRef = collection(db, 'phrases');
+                const q = query(phrasesRef, orderBy('timestamp', 'asc'));
+                const querySnapshot = await getDocs(q);
+                
+                phrases = [];
+                querySnapshot.forEach((doc) => {
+                    phrases.push(doc.data().text);
+                });
+                
+                // If no phrases in database, use initial phrases and add them
+                if (phrases.length === 0) {
+                    await initializeDatabase();
+                    phrases = [...initialPhrases];
+                }
+                
+                updateDisplay();
+            } catch (error) {
+                console.error('Error loading phrases:', error);
+                // Fallback to initial phrases if Firebase fails
+                phrases = [...initialPhrases];
+                updateDisplay();
+            }
+        }
+        
+        // Initialize database with initial phrases
+        async function initializeDatabase() {
+            try {
+                const phrasesRef = collection(db, 'phrases');
+                for (const phrase of initialPhrases) {
+                    await addDoc(phrasesRef, {
+                        text: phrase,
+                        timestamp: new Date()
+                    });
+                }
+                console.log('Database initialized with default phrases');
+            } catch (error) {
+                console.error('Error initializing database:', error);
+            }
+        }
+        
+        // Update the display
+        function updateDisplay() {
+            const container = document.getElementById('phrases-container');
+            
+            if (phrases.length > 0) {
+                // Clear container
+                container.innerHTML = '';
+                
+                // Add all phrases up to current index + 1
+                for (let i = 0; i <= currentIndex; i++) {
+                    const phraseDiv = document.createElement('div');
+                    phraseDiv.className = 'phrase visible';
+                    phraseDiv.textContent = phrases[i];
+                    
+                    if (i === currentIndex) {
+                        phraseDiv.classList.add('current');
+                    } else {
+                        phraseDiv.classList.add('previous');
+                    }
+                    
+                    container.appendChild(phraseDiv);
+                }
+                
+                document.getElementById('current-num').textContent = currentIndex + 1;
+                document.getElementById('total-num').textContent = phrases.length;
+            }
+        }
+        
+        // Cycle to next phrase
+        function nextPhrase() {
+            if (phrases.length > 0) {
+                currentIndex = (currentIndex + 1) % phrases.length;
+                updateDisplay();
+            }
+        }
+        
+        // Handle keyboard events
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                event.preventDefault(); // Prevent page scrolling
+                nextPhrase();
+            }
+        });
+        
+        // Submit new phrase
+        async function submitPhrase() {
+            const input = document.getElementById('phrase-input');
+            const newPhrase = input.value.trim();
+            
+            if (newPhrase && newPhrase.length > 0) {
+                try {
+                    // Add to Firestore
+                    const phrasesRef = collection(db, 'phrases');
+                    await addDoc(phrasesRef, {
+                        text: newPhrase,
+                        timestamp: new Date()
+                    });
+                    
+                    // Add to local array
+                    phrases.push(newPhrase);
+                    input.value = '';
+                    
+                    // Show feedback
+                    const feedback = document.getElementById('feedback');
+                    feedback.classList.add('show');
+                    setTimeout(() => {
+                        feedback.classList.remove('show');
+                    }, 2000);
+                    
+                    // Update counter
+                    updateDisplay();
+                } catch (error) {
+                    console.error('Error adding phrase:', error);
+                    // Show error feedback
+                    const feedback = document.getElementById('feedback');
+                    feedback.textContent = 'Error adding phrase. Please try again.';
+                    feedback.style.color = '#dc3545';
+                    feedback.classList.add('show');
+                    setTimeout(() => {
+                        feedback.classList.remove('show');
+                        feedback.textContent = 'Phrase added successfully!';
+                        feedback.style.color = '#28a745';
+                    }, 2000);
+                }
+            }
+        }
+        
+        // Make submitPhrase available globally
+        window.submitPhrase = submitPhrase;
+        
+        // Allow Enter key to submit
+        document.getElementById('phrase-input').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                submitPhrase();
+            }
+        });
+        
+        // Initialize - show first phrase immediately, then load from database
+        phrases = [...initialPhrases];
+        updateDisplay();
+        loadPhrases();
+    </script>
+</body>
+</html>
