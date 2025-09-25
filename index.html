@@ -25,26 +25,49 @@
             max-width: 80%;
         }
         
-        .phrase {
-            text-align: center;
+        .phrase-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             margin: 10px 0;
-            line-height: 1.2;
             transition: all 0.3s ease;
             opacity: 0;
             transform: scale(0.8);
         }
         
-        .phrase.visible {
+        .phrase-wrapper.visible {
             opacity: 1;
             transform: scale(1);
         }
         
-        .phrase.current {
+        .gossip-label {
+            font-size: 0.8em;
+            color: #999;
+            margin-bottom: 5px;
+            font-weight: normal;
+        }
+        
+        .phrase {
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .phrase-wrapper.current .gossip-label {
+            font-size: 1em;
+            color: #666;
+        }
+        
+        .phrase-wrapper.current .phrase {
             font-size: 2.5em;
             font-weight: bold;
         }
         
-        .phrase.previous {
+        .phrase-wrapper.previous .gossip-label {
+            font-size: 0.6em;
+            color: #aaa;
+        }
+        
+        .phrase-wrapper.previous .phrase {
             font-size: 1.2em;
             color: #666;
         }
@@ -116,7 +139,7 @@
 <body>
     <div class="guide">Press SPACEBAR to cycle through phrases</div>
     <div class="counter">
-        <span id="current-num">1</span> of <span id="total-num">15</span>
+        <span id="current-num">1</span> of <span id="total-num">9</span>
     </div>
     
     <div class="phrases-container" id="phrases-container">
@@ -135,26 +158,21 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
 
         // Your web app's Firebase configuration
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
-        apiKey: "AIzaSyCUtxswciqwySEfFU_D45BsVpCbILxjHRo",
-        authDomain: "gossip-gestures.firebaseapp.com",
-        projectId: "gossip-gestures",
-        storageBucket: "gossip-gestures.firebasestorage.app",
-        messagingSenderId: "759885271389",
-        appId: "1:759885271389:web:402f9ce3152c57898fd8b4",
-        measurementId: "G-MR3D4QSECX"
+            apiKey: "AIzaSyCUtxswciqwySEfFU_D45BsVpCbILxjHRo",
+            authDomain: "gossip-gestures.firebaseapp.com",
+            projectId: "gossip-gestures",
+            storageBucket: "gossip-gestures.firebasestorage.app",
+            messagingSenderId: "759885271389",
+            appId: "1:759885271389:web:402f9ce3152c57898fd8b4",
+            measurementId: "G-MR3D4QSECX"
         };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const analytics = getAnalytics(app);
 
         // Initial phrases (fallback if database is empty)
         const initialPhrases = [
@@ -166,7 +184,7 @@
             "bitching about someone that's wronged you",
             "talking shit about sketchy people",
             "chatting with all the other tenants in your building about how much rent everyone pays",
-            "sitting around a dinner table with your besties discussing who's boning who",
+            "sitting around a dinner table with your besties discussing who's boning who"
         ];
         
         let phrases = [];
@@ -225,17 +243,26 @@
                 
                 // Add all phrases up to current index + 1
                 for (let i = 0; i <= currentIndex; i++) {
+                    const wrapperDiv = document.createElement('div');
+                    wrapperDiv.className = 'phrase-wrapper visible';
+                    
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'gossip-label';
+                    labelDiv.textContent = 'Gossip is...';
+                    
                     const phraseDiv = document.createElement('div');
-                    phraseDiv.className = 'phrase visible';
+                    phraseDiv.className = 'phrase';
                     phraseDiv.textContent = phrases[i];
                     
                     if (i === currentIndex) {
-                        phraseDiv.classList.add('current');
+                        wrapperDiv.classList.add('current');
                     } else {
-                        phraseDiv.classList.add('previous');
+                        wrapperDiv.classList.add('previous');
                     }
                     
-                    container.appendChild(phraseDiv);
+                    wrapperDiv.appendChild(labelDiv);
+                    wrapperDiv.appendChild(phraseDiv);
+                    container.appendChild(wrapperDiv);
                 }
                 
                 document.getElementById('current-num').textContent = currentIndex + 1;
