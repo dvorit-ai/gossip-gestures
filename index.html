@@ -11,6 +11,8 @@
             --bg-colour: #EFE8D8;
         }
 
+        * {}
+
         body {
             font-family: Helvetica, sans-serif;
             margin: 0;
@@ -162,12 +164,33 @@
             min-width: 300px;
             background-color: var(--bg-colour);
             outline: none;
-            color:var(--main-colour);
+            color: var(--main-colour);
         }
 
         .submit-section input:focus {
             border-color: var(--main-colour);
             box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+        }
+
+        .submit-section input::placeholder {
+            color: var(--main-colour);
+            opacity: 0.6;
+        }
+
+        /* For older browsers */
+        .submit-section input::-webkit-input-placeholder {
+            color: var(--main-colour);
+            opacity: 0.6;
+        }
+
+        .submit-section input::-moz-placeholder {
+            color: var(--main-colour);
+            opacity: 0.6;
+        }
+
+        .submit-section input:-ms-input-placeholder {
+            color: var(--main-colour);
+            opacity: 0.6;
         }
 
         .submit-section button {
@@ -180,7 +203,7 @@
             cursor: pointer;
             font-weight: bold;
             text-transform: uppercase;
-            scale:1;
+            scale: 1;
             transition: background-color 0.2s ease;
         }
 
@@ -326,6 +349,38 @@
         let phrases = [];
         let currentIndex = 0;
 
+        // Predefined color combinations
+        const colorCombinations = [
+            { main: '#FF4552', bg: '#EFE8D8' }, // Original red/cream
+            { main: '#EFE8D8', bg: '#FF4552' }, // REVERSE: red/cream
+            { main: '#8F0F50', bg: '#BBBE64' }, // maroon/avocado
+            { main: '#1D6DAF', bg: '#FFF6A7' }, // Steel blue/lemon chiffon
+            { main: '#0C090D', bg: '#E01A4F' }, // black/crimson
+            { main: '#3B3561', bg: '#FF7E7E' }, // purple/coral
+            { main: '#8C23FF', bg: '#03FDFF' }, // bright purple/turquoise
+            { main: '#5E30CF', bg: '#99FFD0' }, // purple/mint
+            { main: '#B8237F', bg: '#FFDE4F' }, // magenta/tangerine
+        ];
+
+        let lastColorIndex = 0; // Track the last selected color combination
+
+        function changeColors() {
+            let randomIndex;
+
+            // Keep generating random numbers until we get one different from the last
+            do {
+                randomIndex = Math.floor(Math.random() * colorCombinations.length);
+            } while (randomIndex === lastColorIndex && colorCombinations.length > 1);
+
+            // Update the last color index
+            lastColorIndex = randomIndex;
+
+            const selectedColors = colorCombinations[randomIndex];
+
+            document.documentElement.style.setProperty('--main-colour', selectedColors.main);
+            document.documentElement.style.setProperty('--bg-colour', selectedColors.bg);
+        }
+
         // Load phrases from Firestore
         async function loadPhrases() {
             try {
@@ -438,6 +493,9 @@
         // Cycle to next phrase
         function nextPhrase() {
             if (phrases.length > 0) {
+                // Change colors on each advance
+                changeColors();
+
                 // If we're not at the end yet, continue cycling
                 if (currentIndex < phrases.length - 1) {
                     currentIndex++;
