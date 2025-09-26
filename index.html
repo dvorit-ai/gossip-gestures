@@ -1,208 +1,293 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phrase Cycler</title>
+    <title>Everyone's a Gossip</title>
     <style>
+        :root {
+            --main-colour: #FF4552;
+            --bg-colour: #EFE8D8;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: Helvetica, sans-serif;
             margin: 0;
-            padding: 20px;
-            min-height: 100vh;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-colour);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
-        
+
         .gossip-header {
             position: fixed;
-            top: 60px;
-            font-size: 2.5em;
+            top: 40px;
+            left: 40px;
+            font-size: 1.2em;
             font-weight: bold;
-            text-align: center;
-            opacity: 1;
+            color: var(--main-colour);
+            text-transform: uppercase;
         }
-        
-        .phrases-container {
+
+        .counter {
+            position: fixed;
+            top: 40px;
+            right: 180px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--main-colour);
+        }
+
+        .main-content {
+            display: flex;
+            height: 100vh;
+            align-items: flex-start;
+            justify-content: center;
+            flex: 1;
+            padding: 0 40px;
+            box-sizing: border-box;
+        }
+
+        .left-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding-right: 40px;
+            margin-top: 100px;
+            position: relative;
+        }
+
+        .current-phrase-container {
+            margin-bottom: 40px;
+        }
+
+        .phrase-wrapper.current .phrase {
+            font-size: 4em;
+            font-weight: bold;
+            color: var(--main-colour);
+            line-height: 1;
+            margin: 0;
+        }
+
+        .arrow-button {
+            background-color: var(--main-colour);
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 40vh;
-        }
-        
-        .current-phrase-container {
-            text-align: center;
-            max-width: 80%;
-        }
-        
-        .previous-phrases {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 2em;
+            color: var(--bg-colour);
             position: fixed;
-            top: 140px;
-            right: 20px;
-            width: 300px;
-            max-height: 60vh;
-            overflow-y: auto;
-            background: rgba(248, 248, 248, 0.9);
-            border-radius: 8px;
-            padding: 15px;
-            border: 1px solid #ddd;
+            bottom: 40px;
+            left: 40px;
         }
-        
-        .previous-phrases h4 {
-            margin: 0 0 10px 0;
-            font-size: 0.9em;
-            color: #666;
-            text-align: center;
+
+        .arrow-button:hover {
+            background-color: var(--main-colour);
+            transform: scale(1.05);
         }
-        
-        .phrase-wrapper {
-            margin: 8px 0;
-            transition: all 0.3s ease;
-            opacity: 0;
-            transform: scale(0.8);
-        }
-        
-        .phrase-wrapper.visible {
-            opacity: 1;
+
+        .arrow-button:disabled {
+            background-color: var(--bg-colour);
+            cursor: not-allowed;
             transform: scale(1);
         }
-        
-        .phrase {
-            text-align: center;
-            line-height: 1.2;
-        }
-        
-        .phrase-wrapper.current .phrase {
-            font-size: 2.5em;
+
+        .arrow-button::after {
+            content: "→";
             font-weight: bold;
         }
-        
+
+        .right-sidebar {
+            width: 320px;
+            height: calc(95vh - 80px);
+            margin-top: 80px;
+            border: 2px solid var(--main-colour);
+            border-radius: 15px;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .phrase-wrapper.previous {
+            margin: 12px 0;
+            opacity: 1;
+        }
+
         .phrase-wrapper.previous .phrase {
-            font-size: 0.9em;
-            color: #666;
+            font-size: 0.85em;
+            color: var(--main-colour);
+            line-height: 1.2;
+            margin: 0;
             text-align: left;
-            line-height: 1.3;
-            margin: 5px 0;
         }
-        
-        .below-phrases {
-            display: none;
-        }
-        
-        .guide {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            font-size: 0.9em;
-            color: #666;
-        }
-        
-        .counter {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            font-size: 0.9em;
-            color: #666;
-        }
-        
+
         .submit-section {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 80px;
+            left: 40px;
             display: none;
             flex-direction: column;
-            gap: 5px;
-            align-items: center;
+            gap: 15px;
             opacity: 0;
             transition: opacity 0.5s ease;
         }
-        
+
         .submit-section.show {
             display: flex;
             opacity: 1;
         }
-        
-        .submit-prompt {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
+
         .submit-controls {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
         }
-        
+
         .submit-section input {
-            padding: 8px 12px;
+            padding: 15px 20px;
             font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 2px solid var(--main-colour);
+            border-radius: 8px;
             min-width: 300px;
+            background-color: var(--bg-colour);
+            outline: none;
+            color:var(--main-colour);
         }
-        
+
+        .submit-section input:focus {
+            border-color: var(--main-colour);
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+        }
+
         .submit-section button {
-            padding: 8px 16px;
+            padding: 15px 25px;
             font-size: 1em;
-            background-color: #007cba;
-            color: white;
+            background-color: var(--main-colour);
+            color: var(--bg-colour);
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            scale:1;
+            transition: background-color 0.2s ease;
         }
-        
+
         .submit-section button:hover {
-            background-color: #005a8b;
+            scale: 1.05;
+            transition: scale 0.2s ease;
         }
-        
+
         .feedback {
             position: fixed;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 20px;
+            left: 60px;
             color: #28a745;
             font-size: 0.9em;
             opacity: 0;
             transition: opacity 0.3s;
         }
-        
+
         .feedback.show {
             opacity: 1;
         }
+
+        /* Hide elements initially */
+        .phrase-wrapper {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+
+        .phrase-wrapper.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 0 20px;
+                flex-direction: column;
+            }
+
+            .left-section {
+                padding-right: 0;
+                text-align: center;
+            }
+
+            .phrase-wrapper.current .phrase {
+                font-size: 2.5em;
+            }
+
+            .right-sidebar {
+                width: 100%;
+                height: 200px;
+                position: fixed;
+                bottom: 0;
+                border: none;
+                border-top: 2px solid var(--main-colour);
+                border-radius: 0;
+            }
+
+            .gossip-header {
+                left: 20px;
+                top: 20px;
+            }
+
+            .counter {
+                right: 20px;
+                top: 20px;
+            }
+
+            .submit-section {
+                left: 20px;
+                bottom: 220px;
+            }
+        }
     </style>
 </head>
+
 <body>
     <div class="gossip-header">Gossip is...</div>
-    
-    <div class="guide">Press SPACEBAR to cycle through phrases</div>
     <div class="counter">
-        <span id="current-num">1</span> of <span id="total-num">9</span>
+        <span id="current-num">1</span> / <span id="total-num">9</span>
     </div>
-    
-    <div class="previous-phrases" id="previous-phrases">
-        <h4>Phrases you've seen:</h4>
-        <!-- Previous phrases will be added here -->
-    </div>
-    
-    <div class="phrases-container">
-        <div class="current-phrase-container" id="current-phrase-container">
-            <!-- Current phrase will be added here -->
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="current-phrase-container" id="current-phrase-container">
+                <!-- Current phrase will be added here -->
+            </div>
+            <button class="arrow-button" id="arrow-button" onclick="nextPhrase()"></button>
+        </div>
+
+        <div class="right-sidebar">
+            <div id="previous-phrases">
+                <!-- Previous phrases will be added here -->
+            </div>
         </div>
     </div>
-    
+
     <div class="submit-section" id="submit-section">
-        <div class="submit-prompt">No more? Add your own!</div>
         <div class="submit-controls">
-            <input type="text" id="phrase-input" placeholder="Add your own phrase..." maxlength="200">
-            <button onclick="submitPhrase()">Submit</button>
+            <input type="text" id="phrase-input" placeholder="add your example..." maxlength="300">
+            <button onclick="submitPhrase()">Contribute</button>
         </div>
     </div>
-    
-    <div class="feedback" id="feedback">Phrase added successfully!</div>
+
+    <div class="feedback" id="feedback">added!</div>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -237,28 +322,28 @@
             "chatting with all the other tenants in your building about how much rent everyone pays",
             "sitting around a dinner table with your besties discussing who's boning who"
         ];
-        
+
         let phrases = [];
         let currentIndex = 0;
-        
+
         // Load phrases from Firestore
         async function loadPhrases() {
             try {
                 const phrasesRef = collection(db, 'phrases');
                 const q = query(phrasesRef, orderBy('timestamp', 'asc'));
                 const querySnapshot = await getDocs(q);
-                
+
                 phrases = [];
                 querySnapshot.forEach((doc) => {
                     phrases.push(doc.data().text);
                 });
-                
+
                 // If no phrases in database, use initial phrases and add them
                 if (phrases.length === 0) {
                     await initializeDatabase();
                     phrases = [...initialPhrases];
                 }
-                
+
                 updateDisplay();
             } catch (error) {
                 console.error('Error loading phrases:', error);
@@ -267,7 +352,7 @@
                 updateDisplay();
             }
         }
-        
+
         // Initialize database with initial phrases
         async function initializeDatabase() {
             try {
@@ -283,68 +368,73 @@
                 console.error('Error initializing database:', error);
             }
         }
-        
+
         // Update the display
         function updateDisplay() {
             const previousContainer = document.getElementById('previous-phrases');
             const currentContainer = document.getElementById('current-phrase-container');
-            
+            const arrowButton = document.getElementById('arrow-button');
+
             if (phrases.length > 0) {
                 // Clear current phrase container
                 currentContainer.innerHTML = '';
-                
+
                 // If we've reached the end, show empty center (for submit form)
                 if (currentIndex >= phrases.length) {
                     // Show all phrases in sidebar
-                    let sidebarContent = '<h4>All phrases:</h4>';
+                    previousContainer.innerHTML = '';
                     for (let i = 0; i < phrases.length; i++) {
                         const wrapperDiv = document.createElement('div');
                         wrapperDiv.className = 'phrase-wrapper visible previous';
-                        
+
                         const phraseDiv = document.createElement('div');
                         phraseDiv.className = 'phrase';
                         phraseDiv.textContent = phrases[i];
-                        
+
                         wrapperDiv.appendChild(phraseDiv);
-                        sidebarContent += wrapperDiv.outerHTML;
+                        previousContainer.appendChild(wrapperDiv);
                     }
-                    previousContainer.innerHTML = sidebarContent;
-                    
+
+                    // Disable arrow button
+                    arrowButton.disabled = true;
+
                     document.getElementById('current-num').textContent = phrases.length;
                     document.getElementById('total-num').textContent = phrases.length;
                 } else {
+                    // Enable arrow button
+                    arrowButton.disabled = false;
+
                     // Update sidebar with previous phrases
-                    let sidebarContent = '<h4>Phrases you\'ve seen:</h4>';
+                    previousContainer.innerHTML = '';
                     for (let i = 0; i < currentIndex; i++) {
                         const wrapperDiv = document.createElement('div');
                         wrapperDiv.className = 'phrase-wrapper visible previous';
-                        
+
                         const phraseDiv = document.createElement('div');
                         phraseDiv.className = 'phrase';
                         phraseDiv.textContent = phrases[i];
-                        
+
                         wrapperDiv.appendChild(phraseDiv);
-                        sidebarContent += wrapperDiv.outerHTML;
+                        previousContainer.appendChild(wrapperDiv);
                     }
-                    previousContainer.innerHTML = sidebarContent;
-                    
+
                     // Show current phrase in center
                     const currentWrapperDiv = document.createElement('div');
                     currentWrapperDiv.className = 'phrase-wrapper visible current';
-                    
+
                     const currentPhraseDiv = document.createElement('div');
                     currentPhraseDiv.className = 'phrase';
                     currentPhraseDiv.textContent = phrases[currentIndex];
-                    
+
                     currentWrapperDiv.appendChild(currentPhraseDiv);
                     currentContainer.appendChild(currentWrapperDiv);
-                    
+
                     document.getElementById('current-num').textContent = currentIndex + 1;
                     document.getElementById('total-num').textContent = phrases.length;
                 }
             }
         }
-        
+
         // Cycle to next phrase
         function nextPhrase() {
             if (phrases.length > 0) {
@@ -356,16 +446,19 @@
                     // We're at the last phrase - make it small and show submit section
                     currentIndex = phrases.length; // Set to beyond last index to trigger end state
                     updateDisplay();
-                    
+
                     // Show submit section with animation
                     const submitSection = document.getElementById('submit-section');
                     submitSection.classList.add('show');
                 }
             }
         }
-        
+
+        // Make nextPhrase available globally for the button
+        window.nextPhrase = nextPhrase;
+
         // Handle keyboard events
-        document.addEventListener('keydown', function(event) {
+        document.addEventListener('keydown', function (event) {
             if (event.code === 'Space') {
                 // Only prevent spacebar cycling if we're NOT in the input field
                 if (event.target.id !== 'phrase-input') {
@@ -377,12 +470,12 @@
                 }
             }
         });
-        
+
         // Submit new phrase
         async function submitPhrase() {
             const input = document.getElementById('phrase-input');
             const newPhrase = input.value.trim();
-            
+
             if (newPhrase && newPhrase.length > 0) {
                 try {
                     // Add to Firestore
@@ -391,18 +484,18 @@
                         text: newPhrase,
                         timestamp: new Date()
                     });
-                    
+
                     // Add to local array
                     phrases.push(newPhrase);
                     input.value = '';
-                    
+
                     // Show feedback
                     const feedback = document.getElementById('feedback');
                     feedback.classList.add('show');
                     setTimeout(() => {
                         feedback.classList.remove('show');
                     }, 2000);
-                    
+
                     // Update counter
                     updateDisplay();
                 } catch (error) {
@@ -420,21 +513,22 @@
                 }
             }
         }
-        
+
         // Make submitPhrase available globally
         window.submitPhrase = submitPhrase;
-        
+
         // Allow Enter key to submit
-        document.getElementById('phrase-input').addEventListener('keydown', function(event) {
+        document.getElementById('phrase-input').addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
                 submitPhrase();
             }
         });
-        
+
         // Initialize - show first phrase immediately, then load from database
         phrases = [...initialPhrases];
         updateDisplay();
         loadPhrases();
     </script>
 </body>
+
 </html>
