@@ -23,10 +23,19 @@
             quotes: "“" "”" "‘" "’";
         }
 
+        a {
+            color: var(--main-colour);
+            text-decoration: none;
+        }
+
+        a:hover {
+            opacity: 0.8;
+        }
+
         .gossip-header {
             position: fixed;
             top: 40px;
-            left: 40px;
+            left: 42px;
             font-size: 1.2em;
             font-weight: bold;
             color: var(--main-colour);
@@ -40,11 +49,19 @@
             font-size: 1.2em;
             font-weight: bold;
             color: var(--main-colour);
+            z-index: 9999999999;
+            transition: right 0.3s ease;
+            /* Add this */
+        }
+
+        .counter.sidebar-open {
+            right: 360px;
+            /* Add this */
         }
 
         .main-content {
             height: 100vh;
-            width:calc(100vw - 300px);
+            width: calc(100vw - 300px);
             padding: 0 40px;
             box-sizing: border-box;
             margin-top: 100px;
@@ -58,24 +75,45 @@
             margin: 0;
         }
 
-        .arrow-button {
+        .phrase-wrapper.intro .phrase {
+            font-size: 3em;
+            font-weight: 600;
+            line-height: 1.1;
+        }
+
+        #arrows-container {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .arrow-button,
+        .back-button {
             background-color: var(--main-colour);
             border: 2px solid var(--main-colour);
+            border-radius: 8px;
             width: 100px;
             height: 70px;
-            border-radius: 8px;
             display: flex;
             align-items: end;
             justify-content: center;
             cursor: pointer;
             font-size: 4em;
             color: var(--bg-colour);
-            position: fixed;
-            bottom: 50px;
-            left: 40px;
+            position: relative;
+            font-weight: bold;
         }
 
-        .arrow-button:hover {
+        .back-button {
+            display: none;
+        }
+
+        .arrow-button:hover,
+        .back-button:hover {
             background-color: var(--bg-colour);
             color: var(--main-colour);
             box-shadow: 0px 5px 0 0 var(--main-colour);
@@ -89,7 +127,10 @@
 
         .arrow-button::after {
             content: "→";
-            font-weight: bold;
+        }
+
+        .back-button::after {
+            content: "←";
         }
 
         .right-sidebar {
@@ -101,7 +142,7 @@
             /* Hidden by default */
             background-color: var(--bg-colour);
             border-left: 2px solid var(--main-colour);
-            padding: 20px;
+            padding: 40px 20px;
             box-sizing: border-box;
             overflow-y: auto;
             transition: right 0.3s ease;
@@ -157,7 +198,7 @@
         }
 
         .phrase-section h3 {
-            font-size:0.9em;
+            font-size: 0.9em;
             text-transform: uppercase;
             font-weight: bold;
             margin: 0 0 15px 0;
@@ -329,29 +370,32 @@
 </script>
 
 <body>
-    <div class="gossip-header">Gossip is...</div>
+    <div class="gossip-header"><a href="index.html">Gestures of Gossip</a></div>
     <div class="counter">
         <span id="current-num">1</span> / <span id="total-num">9</span>
     </div>
 
     <div class="main-content">
-            <div class="current-phrase-container" id="current-phrase-container">
-                <!-- Current phrase will be added here -->
-            </div>
+        <div class="current-phrase-container" id="current-phrase-container">
+            <!-- Current phrase will be added here -->
+        </div>
+        <div id="arrows-container">
+            <button class="back-button" id="back-button" onclick="previousPhrase()"></button>
             <button class="arrow-button" id="arrow-button" onclick="nextPhrase()"></button>
+        </div>
 
         <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()"></button>
 
         <div class="right-sidebar" id="right-sidebar">
             <div class="phrase-section">
-                <h3>Everyone's a gossip.<br> Gossip is...</h3>
+                <h3>Everyone's a gossip.</h3>
                 <div id="original-phrases">
                     <!-- Original phrases will be added here -->
                 </div>
             </div>
 
             <div class="phrase-section">
-                <h3>and more gossip...</h3>
+                <h3>community contributions</h3>
                 <div id="contributed-phrases">
                     <!-- User-contributed phrases will be added here -->
                 </div>
@@ -389,6 +433,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Intro text that appears before phrases
+        const introText = [
+            "gossip is fun; gossip is safety; gossip is an exchange of information to better understand the social dynamics in groups; gossip is sharing stories about ourselves; gossip is currency; gossip is caring for those in our communities.",
+            "Everyone is a gossip.<br>These gestures show how."
+        ];
+
         // Initial phrases (fallback if database is empty)
         const initialPhrases = [
             "finding out how much $$ everyone makes at your workplace",
@@ -402,6 +452,7 @@
         ];
 
         let phrases = [];
+        let introComplete = false;
         let currentIndex = 0;
 
         // Predefined color combinations
@@ -409,15 +460,22 @@
             { main: '#FF4552', bg: '#EFE8D8' }, // Original red/cream
             { main: '#EFE8D8', bg: '#FF4552' }, // REVERSE: red/cream
             { main: '#8F0F50', bg: '#BBBE64' }, // maroon/avocado
-            { main: '#1D6DAF', bg: '#FFF6A7' }, // Steel blue/lemon chiffon
+            { main: '#1D6DAF', bg: '#e4e1d8' }, // steel blue/off-white
+            { main: '#b23d3e', bg: '#FFF6A7' }, // burgundy/lemon chiffon
             { main: '#0C090D', bg: '#E01A4F' }, // black/crimson
             { main: '#3B3561', bg: '#FF7E7E' }, // purple/coral
             { main: '#8C23FF', bg: '#03FDFF' }, // bright purple/turquoise
             { main: '#5E30CF', bg: '#99FFD0' }, // purple/mint
             { main: '#B8237F', bg: '#FFDE4F' }, // magenta/tangerine
+            { main: '#d45b1d', bg: '#c6cc4e' }, // orange-red/green
+            { main: '#235836', bg: '#a9b5c8' }, // dark green/lavendar
         ];
 
-        let lastColorIndex = 0; // Track the last selected color combination
+        let lastColorIndex = Math.floor(Math.random() * colorCombinations.length);
+
+        // Set initial random colors
+        document.documentElement.style.setProperty('--main-colour', colorCombinations[lastColorIndex].main);
+        document.documentElement.style.setProperty('--bg-colour', colorCombinations[lastColorIndex].bg);
 
         function changeColors() {
             let randomIndex;
@@ -437,13 +495,15 @@
         }
 
         // Track which phrases are original vs contributed
-        
+
         function toggleSidebar() {
             const sidebar = document.getElementById('right-sidebar');
             const toggle = document.getElementById('sidebar-toggle');
+            const counter = document.querySelector('.counter');
 
             sidebar.classList.toggle('open');
             toggle.classList.toggle('open');
+            counter.classList.toggle('sidebar-open');
         }
 
         function updateSidebar() {
@@ -536,22 +596,44 @@
             const currentContainer = document.getElementById('current-phrase-container');
             const arrowButton = document.getElementById('arrow-button');
 
+            // Handle intro text first
+            if (!introComplete) {
+                if (currentIndex < introText.length) {
+                    currentContainer.innerHTML = '';
+
+                    const currentWrapperDiv = document.createElement('div');
+                    currentWrapperDiv.className = 'phrase-wrapper visible current intro';
+
+                    const currentPhraseDiv = document.createElement('div');
+                    currentPhraseDiv.className = 'phrase';
+                    currentPhraseDiv.innerHTML = introText[currentIndex];
+
+                    currentWrapperDiv.appendChild(currentPhraseDiv);
+                    currentContainer.appendChild(currentWrapperDiv);
+
+                    document.getElementById('current-num').textContent = currentIndex + 1;
+                    document.getElementById('total-num').textContent = introText.length + phrases.length;
+
+                    arrowButton.disabled = false;
+                    return;
+                } else {
+                    // Intro is complete, reset index for phrases
+                    introComplete = true;
+                    currentIndex = 0;
+                }
+            }
+
+            // Original display logic for phrases
             if (phrases.length > 0) {
-                // Clear current phrase container
                 currentContainer.innerHTML = '';
 
-                // If we've reached the end, show empty center (for submit form)
                 if (currentIndex >= phrases.length) {
-                    // Disable arrow button
                     arrowButton.disabled = true;
-
-                    document.getElementById('current-num').textContent = phrases.length;
-                    document.getElementById('total-num').textContent = phrases.length;
+                    document.getElementById('current-num').textContent = introText.length + phrases.length;
+                    document.getElementById('total-num').textContent = introText.length + phrases.length;
                 } else {
-                    // Enable arrow button
                     arrowButton.disabled = false;
 
-                    // Show current phrase in center
                     const currentWrapperDiv = document.createElement('div');
                     currentWrapperDiv.className = 'phrase-wrapper visible current';
 
@@ -562,32 +644,42 @@
                     currentWrapperDiv.appendChild(currentPhraseDiv);
                     currentContainer.appendChild(currentWrapperDiv);
 
-                    document.getElementById('current-num').textContent = currentIndex + 1;
-                    document.getElementById('total-num').textContent = phrases.length;
+                    document.getElementById('current-num').textContent = introText.length + currentIndex + 1;
+                    document.getElementById('total-num').textContent = introText.length + phrases.length;
                 }
             }
+            updateBackButton();
         }
 
         // Cycle to next phrase
         function nextPhrase() {
-            if (phrases.length > 0) {
-                // Change colors on each advance
-                changeColors();
+            changeColors();
 
-                // If we're not at the end yet, continue cycling
+            if (!introComplete) {
+                // Still in intro
+                if (currentIndex < introText.length - 1) {
+                    currentIndex++;
+                    updateDisplay();
+                } else {
+                    // Moving from intro to phrases
+                    introComplete = true;
+                    currentIndex = 0;
+                    updateDisplay();
+                }
+            } else {
+                // In phrases
                 if (currentIndex < phrases.length - 1) {
                     currentIndex++;
                     updateDisplay();
                 } else {
-                    // We're at the last phrase - make it small and show submit section
-                    currentIndex = phrases.length; // Set to beyond last index to trigger end state
+                    currentIndex = phrases.length;
                     updateDisplay();
 
-                    // Show submit section with animation
                     const submitSection = document.getElementById('submit-section');
                     submitSection.classList.add('show');
                 }
             }
+            updateBackButton();
         }
 
         // Make nextPhrase available globally for the button
@@ -595,13 +687,19 @@
 
         // Handle keyboard events
         document.addEventListener('keydown', function (event) {
-            if (event.code === 'Space') {
-                // Only prevent spacebar cycling if we're NOT in the input field
-                if (event.target.id !== 'phrase-input') {
-                    event.preventDefault(); // Prevent page scrolling
-                    // Only allow spacebar cycling if we haven't reached the end
-                    if (currentIndex < phrases.length) {
+            // Only allow arrow keys if we're NOT in the input field
+            if (event.target.id !== 'phrase-input') {
+                if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    // Only allow forward if we haven't reached the end
+                    if (!introComplete || currentIndex < phrases.length) {
                         nextPhrase();
+                    }
+                } else if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    // Only allow back if we're not on the first item
+                    if (!(!introComplete && currentIndex === 0)) {
+                        previousPhrase();
                     }
                 }
             }
@@ -661,10 +759,53 @@
             }
         });
 
-        // Initialize - show first phrase immediately, then load from database
+        // Initialize - show first intro text immediately
         phrases = [...initialPhrases];
         updateDisplay();
         loadPhrases();
+
+        // Go back to previous phrase
+        function previousPhrase() {
+            changeColors();
+
+            if (introComplete && currentIndex === 0) {
+                // Going back from first phrase to last intro
+                introComplete = false;
+                currentIndex = introText.length - 1;
+            } else if (!introComplete && currentIndex > 0) {
+                // Going back within intro
+                currentIndex--;
+            } else if (introComplete && currentIndex > 0) {
+                // Going back within phrases
+                currentIndex--;
+
+                // Hide submit section if we were at the end
+                const submitSection = document.getElementById('submit-section');
+                submitSection.classList.remove('show');
+            } else if (introComplete && currentIndex >= phrases.length) {
+                // Going back from submit section to last phrase
+                currentIndex = phrases.length - 1;
+                const submitSection = document.getElementById('submit-section');
+                submitSection.classList.remove('show');
+            }
+
+            updateDisplay();
+            updateBackButton();
+        }
+
+        // Make previousPhrase available globally
+        window.previousPhrase = previousPhrase;
+
+        function updateBackButton() {
+            const backButton = document.getElementById('back-button');
+
+            // Show back button if we're not on the very first item
+            if (!(!introComplete && currentIndex === 0)) {
+                backButton.style.display = 'flex';
+            } else {
+                backButton.style.display = 'none';
+            }
+        }
     </script>
 </body>
 
