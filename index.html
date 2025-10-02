@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Everyone's a Gossip</title>
+    <link rel="icon" type="image/png" href="images/Gossip_FavIcon_Colour.png">
     <style>
         :root {
             --main-colour: #FF4552;
@@ -40,6 +41,7 @@
             font-weight: bold;
             color: var(--main-colour);
             text-transform: uppercase;
+            z-index: 9999999999;
         }
 
         .counter {
@@ -56,7 +58,6 @@
 
         .counter.sidebar-open {
             right: 360px;
-            /* Add this */
         }
 
         .main-content {
@@ -142,7 +143,7 @@
             /* Hidden by default */
             background-color: var(--bg-colour);
             border-left: 2px solid var(--main-colour);
-            padding: 40px 20px;
+            padding: 30px 20px;
             box-sizing: border-box;
             overflow-y: auto;
             transition: right 0.3s ease;
@@ -198,7 +199,7 @@
         }
 
         .phrase-section h3 {
-            font-size: 0.9em;
+            font-size: 1.2em;
             text-transform: uppercase;
             font-weight: bold;
             margin: 0 0 15px 0;
@@ -207,17 +208,21 @@
         }
 
         .phrase {
-            font-size: 0.85em;
+            font-size: 0.9em;
             line-height: 1.2;
             margin: 10px 0;
         }
 
         .submit-section {
-            position: fixed;
+            width: 100%;
+            max-width: calc(100vw - 80px);
+            /* Account for padding */
+            position: absolute;
             top: 80px;
             left: 40px;
+            right: 40px;
             display: none;
-            flex-direction: column;
+            flex-direction: row;
             gap: 15px;
             opacity: 0;
             transition: opacity 0.5s ease;
@@ -232,14 +237,18 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            width: 100%;
         }
 
         .submit-section input {
+            flex: 0 1 400px;
+            /* Won't grow, can shrink, preferred width 400px */
+            min-width: 0;
+            /* Important for flex shrinking */
             padding: 15px 20px;
             font-size: 1em;
             border: 2px solid var(--main-colour);
             border-radius: 8px;
-            min-width: 300px;
             background-color: var(--bg-colour);
             outline: none;
             color: var(--main-colour);
@@ -253,6 +262,20 @@
         .submit-section input::placeholder {
             color: var(--main-colour);
             opacity: 0.6;
+        }
+
+        .submit-section button {
+            flex-shrink: 0;
+            /* Button stays at natural size */
+            padding: 15px 25px;
+            font-size: 1em;
+            background-color: var(--main-colour);
+            color: var(--bg-colour);
+            border: 2px solid var(--main-colour);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         /* For older browsers */
@@ -320,11 +343,11 @@
             .main-content {
                 padding: 0 20px;
                 flex-direction: column;
+                width: 100vw;
             }
 
             .left-section {
                 padding-right: 0;
-                text-align: center;
             }
 
             .phrase-wrapper.current .phrase {
@@ -332,13 +355,23 @@
             }
 
             .right-sidebar {
-                width: 100%;
-                height: 200px;
+                width: 100vw;
+                right: -100vw;
+                height: 100%;
                 position: fixed;
                 bottom: 0;
                 border: none;
-                border-top: 2px solid var(--main-colour);
+                border-left: 2px solid var(--main-colour);
                 border-radius: 0;
+                padding-top: 90px;
+            }
+
+            .right-sidebar.open {
+                right: 2px;
+            }
+
+            .sidebar-toggle.open {
+                right: 0px;
             }
 
             .gossip-header {
@@ -351,9 +384,19 @@
                 top: 20px;
             }
 
+            .counter.sidebar-open {
+                right: 20px;
+            }
+
             .submit-section {
                 left: 20px;
-                bottom: 220px;
+                right: 20px;
+                max-width: calc(100vw - 40px);
+            }
+
+            .submit-section input {
+                flex: 1 1 auto;
+                /* Can grow and shrink freely on mobile */
             }
         }
     </style>
@@ -388,7 +431,6 @@
 
         <div class="right-sidebar" id="right-sidebar">
             <div class="phrase-section">
-                <h3>Everyone's a gossip.</h3>
                 <div id="original-phrases">
                     <!-- Original phrases will be added here -->
                 </div>
