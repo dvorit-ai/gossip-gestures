@@ -12,12 +12,13 @@
             --bg-colour: #EFE8D8;
         }
 
-        html, body{
-            overflow:hidden;
+        html,
+        body {
+            overflow: hidden;
         }
 
         body {
-            position:relative;
+            position: relative;
             font-family: Helvetica, sans-serif;
             margin: 0;
             padding: 0;
@@ -571,11 +572,11 @@
             const originalPhrases = [];
             const contributedPhrases = [];
 
-            phrases.forEach(phrase => {
-                if (initialPhrases.includes(phrase)) {
-                    originalPhrases.push(phrase);
+            phrases.forEach(phraseObj => {
+                if (phraseObj.isOriginal) {
+                    originalPhrases.push(phraseObj.text);
                 } else {
-                    contributedPhrases.push(phrase);
+                    contributedPhrases.push(phraseObj.text);
                 }
             });
 
@@ -608,13 +609,16 @@
 
                 phrases = [];
                 querySnapshot.forEach((doc) => {
-                    phrases.push(doc.data().text);
+                    phrases.push({
+                        text: doc.data().text,
+                        isOriginal: doc.data().isOriginal || false
+                    });
                 });
 
                 // If no phrases in database, use initial phrases and add them
                 if (phrases.length === 0) {
                     await initializeDatabase();
-                    phrases = [...initialPhrases];
+                    phrases = initialPhrases.map(text => ({ text, isOriginal: true }));
                 }
 
                 updateDisplay();
@@ -622,7 +626,7 @@
             } catch (error) {
                 console.error('Error loading phrases:', error);
                 // Fallback to initial phrases if Firebase fails
-                phrases = [...initialPhrases];
+                phrases = initialPhrases.map(text => ({ text, isOriginal: true }));
                 updateDisplay();
                 updateSidebar();
             }
@@ -635,7 +639,8 @@
                 for (const phrase of initialPhrases) {
                     await addDoc(phrasesRef, {
                         text: phrase,
-                        timestamp: new Date()
+                        timestamp: new Date(),
+                        isOriginal: true
                     });
                 }
                 console.log('Database initialized with default phrases');
@@ -692,7 +697,7 @@
 
                     const currentPhraseDiv = document.createElement('div');
                     currentPhraseDiv.className = 'phrase';
-                    currentPhraseDiv.textContent = phrases[currentIndex];
+                    currentPhraseDiv.textContent = phrases[currentIndex].text;
 
                     currentWrapperDiv.appendChild(currentPhraseDiv);
                     currentContainer.appendChild(currentWrapperDiv);
@@ -769,11 +774,12 @@
                     const phrasesRef = collection(db, 'phrases');
                     await addDoc(phrasesRef, {
                         text: newPhrase,
-                        timestamp: new Date()
+                        timestamp: new Date(),
+                        isOriginal: false
                     });
 
                     // Add to local array
-                    phrases.push(newPhrase);
+                    phrases.push({ text: newPhrase, isOriginal: false });
                     input.value = '';
 
                     // Show feedback
