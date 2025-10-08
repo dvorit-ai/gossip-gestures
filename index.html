@@ -240,7 +240,7 @@
             margin: 0 0 15px 0;
             border-top: 2px solid var(--main-colour);
             padding-bottom: 5px;
-            padding-top:30px;
+            padding-top: 30px;
         }
 
         .phrase {
@@ -339,8 +339,39 @@
             transform: scale(1);
         }
 
+        .header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding:0;
+            z-index: 9999999999;
+        }
+
         /* Mobile responsiveness */
         @media (max-width: 768px) {
+
+            .header-bar {
+                background-color: var(--bg-colour);
+                border-bottom: 2px solid var(--main-colour);
+                padding-bottom: 35px;
+            }
+
+            .gossip-header {
+                left: 0px;
+                top: 10px;
+                position: relative;
+            }
+
+            .counter {
+                right: 20px;
+                top: 10px;
+                position: relative;
+            }
+
             .main-content {
                 padding: 0 20px;
                 flex-direction: column;
@@ -419,9 +450,11 @@
 </script>
 
 <body>
-    <div class="gossip-header"><a href="index.html">Gestures of Gossip</a></div>
-    <div class="counter">
-        <span id="current-num">1</span> / <span id="total-num">9</span>
+    <div class="header-bar">
+        <div class="gossip-header"><a href="index.html">Gestures of Gossip</a></div>
+        <div class="counter">
+            <span id="current-num">1</span> / <span id="total-num">9</span>
+        </div>
     </div>
 
     <div class="main-content">
