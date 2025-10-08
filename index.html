@@ -58,7 +58,6 @@
             color: var(--main-colour);
             z-index: 9999999999;
             transition: right 0.3s ease;
-            /* Add this */
         }
 
         .counter.sidebar-open {
@@ -97,33 +96,45 @@
             gap: 20px;
         }
 
+        /* Base button styles - shared by all buttons */
         .arrow-button,
-        .back-button {
+        .back-button,
+        .contribute-skip-button,
+        .submit-section button {
             background-color: var(--main-colour);
+            color: var(--bg-colour);
             border: 2px solid var(--main-colour);
             border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: Helvetica, sans-serif;
+            text-transform: uppercase;
+        }
+
+        /* Hover state for all buttons */
+        .arrow-button:hover,
+        .back-button:hover,
+        .contribute-skip-button:hover,
+        .submit-section button:hover {
+            background-color: var(--bg-colour);
+            color: var(--main-colour);
+            box-shadow: 0px 5px 0 0 var(--main-colour);
+        }
+
+        /* Arrow and back button specific styles */
+        .arrow-button,
+        .back-button {
             width: 100px;
             height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
             font-size: 4em;
-            color: var(--bg-colour);
             position: relative;
-            font-weight: bold;
-            font-family: Helvetica, sans-serif;
         }
 
         .back-button {
             display: none;
-        }
-
-        .arrow-button:hover,
-        .back-button:hover {
-            background-color: var(--bg-colour);
-            color: var(--main-colour);
-            box-shadow: 0px 5px 0 0 var(--main-colour);
         }
 
         .arrow-button:disabled {
@@ -140,13 +151,26 @@
             content: "←";
         }
 
+        /* Contribute button specific styles */
+        .contribute-skip-button {
+            width: fit-content;
+            padding: 15px 20px;
+            font-size: 1em;
+        }
+
+        /* Submit section button specific styles */
+        .submit-section button {
+            flex-shrink: 0;
+            padding: 15px 25px;
+            font-size: 1em;
+        }
+
         .right-sidebar {
             width: 320px;
             height: 100vh;
             position: fixed;
             top: 0;
             right: -320px;
-            /* Hidden by default */
             background-color: var(--bg-colour);
             border-left: 2px solid var(--main-colour);
             padding: 30px 20px;
@@ -158,7 +182,6 @@
 
         .right-sidebar.open {
             right: 0;
-            /* Slide in when open */
         }
 
         .sidebar-toggle {
@@ -200,6 +223,11 @@
             font-weight: bold;
         }
 
+        .contribute-button-container {
+            display: flex;
+            justify-content: center;
+        }
+
         .phrase-section {
             margin-bottom: 30px;
             color: var(--main-colour);
@@ -210,8 +238,9 @@
             text-transform: uppercase;
             font-weight: bold;
             margin: 0 0 15px 0;
-            border-bottom: 1px solid var(--main-colour);
+            border-top: 2px solid var(--main-colour);
             padding-bottom: 5px;
+            padding-top:30px;
         }
 
         .phrase {
@@ -223,7 +252,6 @@
         .submit-section {
             width: 100%;
             max-width: calc(100vw - 80px);
-            /* Account for padding */
             position: absolute;
             top: 80px;
             left: 40px;
@@ -249,9 +277,7 @@
 
         .submit-section input {
             flex: 0 1 400px;
-            /* Won't grow, can shrink, preferred width 400px */
             min-width: 0;
-            /* Important for flex shrinking */
             padding: 15px 20px;
             font-size: 1em;
             border: 2px solid var(--main-colour);
@@ -271,20 +297,6 @@
             opacity: 0.6;
         }
 
-        .submit-section button {
-            flex-shrink: 0;
-            /* Button stays at natural size */
-            padding: 15px 25px;
-            font-size: 1em;
-            background-color: var(--main-colour);
-            color: var(--bg-colour);
-            border: 2px solid var(--main-colour);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
         /* For older browsers */
         .submit-section input::-webkit-input-placeholder {
             color: var(--main-colour);
@@ -299,24 +311,6 @@
         .submit-section input:-ms-input-placeholder {
             color: var(--main-colour);
             opacity: 0.6;
-        }
-
-        .submit-section button {
-            padding: 15px 25px;
-            font-size: 1em;
-            background-color: var(--main-colour);
-            color: var(--bg-colour);
-            border: 2px solid var(--main-colour);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .submit-section button:hover {
-            background-color: var(--bg-colour);
-            color: var(--main-colour);
-            box-shadow: 0px 5px 0 0 var(--main-colour);
         }
 
         .feedback {
@@ -409,7 +403,6 @@
 
             .submit-section input {
                 flex: 1 1 auto;
-                /* Can grow and shrink freely on mobile */
             }
         }
     </style>
@@ -455,6 +448,12 @@
                     <!-- User-contributed phrases will be added here -->
                 </div>
             </div>
+
+            <div class="contribute-button-container">
+                <button class="contribute-skip-button" onclick="skipToContribute()">
+                    Contribute
+                </button>
+            </div>
         </div>
     </div>
 
@@ -465,7 +464,7 @@
         </div>
     </div>
 
-    <div class="feedback" id="feedback">added!</div>
+    <div class="feedback" id="feedback"></div>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -707,6 +706,8 @@
                 }
             }
             updateBackButton();
+
+
         }
 
         // Cycle to next phrase
@@ -729,7 +730,7 @@
                 if (currentIndex < phrases.length - 1) {
                     currentIndex++;
                     updateDisplay();
-                } else {
+                } else if (currentIndex === phrases.length - 1) {
                     currentIndex = phrases.length;
                     updateDisplay();
 
@@ -781,6 +782,17 @@
                     // Add to local array
                     phrases.push({ text: newPhrase, isOriginal: false });
                     input.value = '';
+
+                    // Hide the submit form
+                    const submitSection = document.getElementById('submit-section');
+                    submitSection.classList.remove('show');
+
+                    // Go back to show the newly added phrase
+                    currentIndex = phrases.length - 1;
+                    introComplete = true;
+                    updateDisplay();
+                    updateSidebar();
+
 
                     // Show feedback
                     const feedback = document.getElementById('feedback');
@@ -865,6 +877,35 @@
                 backButton.style.display = 'none';
             }
         }
+
+        // Skip to contribute section
+        function skipToContribute() {
+            changeColors();
+
+            // Set to end state
+            introComplete = true;
+            currentIndex = phrases.length;
+
+            // Update display and show submit form
+            updateDisplay();
+
+            const submitSection = document.getElementById('submit-section');
+            submitSection.classList.add('show');
+
+            // Focus the input field for convenience
+            document.getElementById('phrase-input').focus();
+
+            // Close the sidebar (optional - remove these 3 lines if you want it to stay open)
+            const sidebar = document.getElementById('right-sidebar');
+            const toggle = document.getElementById('sidebar-toggle');
+            const counter = document.querySelector('.counter');
+            sidebar.classList.remove('open');
+            toggle.classList.remove('open');
+            counter.classList.remove('sidebar-open');
+        }
+
+        // Make skipToContribute available globally
+        window.skipToContribute = skipToContribute;
     </script>
 </body>
 
