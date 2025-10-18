@@ -534,7 +534,8 @@
             "writing on a bathroom wall to avoid going on a date with a certain person",
             "bitching about someone that's wronged you",
             "chatting with all the other tenants in your building about how much rent everyone pays",
-            "sitting around a dinner table with your besties discussing who's boning who"
+            "sitting around a dinner table with your besties discussing who's boning who",
+            "“can I be mean for a second?”"
         ];
 
         let phrases = [];
@@ -632,7 +633,6 @@
         // Make toggleSidebar available globally
         window.toggleSidebar = toggleSidebar;
 
-        // Load phrases from Firestore
         async function loadPhrases() {
             try {
                 const phrasesRef = collection(db, 'phrases');
@@ -647,10 +647,18 @@
                     });
                 });
 
-                // If no phrases in database, use initial phrases and add them
+                // Only initialize if database is truly empty
                 if (phrases.length === 0) {
                     await initializeDatabase();
-                    phrases = initialPhrases.map(text => ({ text, isOriginal: true }));
+                    // After initializing, reload from database instead of using local array
+                    const newQuery = await getDocs(query(phrasesRef, orderBy('timestamp', 'asc')));
+                    phrases = [];
+                    newQuery.forEach((doc) => {
+                        phrases.push({
+                            text: doc.data().text,
+                            isOriginal: doc.data().isOriginal || false
+                        });
+                    });
                 }
 
                 updateDisplay();
@@ -864,7 +872,6 @@
         });
 
         // Initialize - show first intro text immediately
-        phrases = [...initialPhrases];
         updateDisplay();
         loadPhrases();
 
